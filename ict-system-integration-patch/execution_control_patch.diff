@@ -1,0 +1,37 @@
+// ExecutionService.control.patch - add control handling (graceful pause/resume)
+--- a/src/execution/ExecutionService.js
++++ b/src/execution/ExecutionService.js
+@@
+ class ExecutionService {
+-  async enqueue(setup, opts) {
+-    // This is a stub. In your real system, wire this to your actual ExecutionQueue.
+-    const riskFactor = opts?.riskFactor ?? 1.0;
+-    logger.info({ setupId: setup.id, riskFactor }, 'Enqueued trade to ExecutionQueue');
+-  }
++  constructor() {
++    this.paused = false;
++    // If using Redis pub/sub, you can subscribe to a channel to get pause/resume signals
++  }
++
++  async pause() {
++    this.paused = true;
++    logger.warn('ExecutionService paused');
++    // implement safe stop: stop dequeuing new orders and persist in-flight orders
++  }
++
++  async resume() {
++    this.paused = false;
++    logger.info('ExecutionService resumed');
++    // implement resume logic: restart workers or polling loops
++  }
++
++  async enqueue(setup, opts) {
++    if (this.paused) {
++      logger.warn({ setupId: setup.id }, 'ExecutionService is paused - rejecting new enqueue');
++      throw new Error('execution_paused');
++    }
++    const riskFactor = opts?.riskFactor ?? 1.0;
++    logger.info({ setupId: setup.id, riskFactor }, 'Enqueued trade to ExecutionQueue');
++    // actual enqueue logic here
++  }
+ }

@@ -1,0 +1,23 @@
+version: '3.8'
+services:
+  order-exec:
+    build: .
+    environment:
+      - NODE_ENV=production
+      - PORT=3001
+      - TRADELOCKER_BASE_URL=${TRADELOCKER_BASE_URL}
+      - TRADELOCKER_API_KEY=${TRADELOCKER_API_KEY}
+      - TRADELOCKER_API_SECRET=${TRADELOCKER_API_SECRET}
+      - TRADELOCKER_WS_URL=${TRADELOCKER_WS_URL}
+      - USE_REDIS=${USE_REDIS}
+      - REDIS_URL=${REDIS_URL}
+    ports:
+      - "3001:3001"
+    restart: unless-stopped
+  redis:
+    image: redis:7-alpine
+    command: redis-server --save 60 1 --loglevel warning
+    volumes:
+      - redis-data:/data
+volumes:
+  redis-data: {}

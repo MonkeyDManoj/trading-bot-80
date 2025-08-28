@@ -1,0 +1,42 @@
+// RiskService.integration.patch (apply into your RiskService where onTradeClosed is implemented)
+// This patch shows the changes to call pushClosedTrade helper and to publish to Redis list for reports.
+
+--- a/src/risk/RiskService.ts
++++ b/src/risk/RiskService.ts
+@@
+   async onTradeClosed(pnl: number) {
+-    const state = await this.store.getState();
+-    const equity = state.equity + pnl;
+-    const realizedToday = pnl > 0 ? state.realizedToday + pnl : state.realizedToday;
+-    const highestEquityToday = Math.max(state.highestEquityToday, equity);
+-    const totalHighestEquity = Math.max(state.totalHighestEquity, equity);
+-    await this.store.setState({ equity, realizedToday, highestEquityToday, totalHighestEquity });
+-    logger.info({ pnl, equity }, 'Trade closed updated');
++    const state = await this.store.getState();
++    const equity = state.equity + pnl;
++    const realizedToday = pnl > 0 ? state.realizedToday + pnl : state.realizedToday;
++    const highestEquityToday = Math.max(state.highestEquityToday, equity);
++    const totalHighestEquity = Math.max(state.totalHighestEquity, equity);
++    await this.store.setState({ equity, realizedToday, highestEquityToday, totalHighestEquity });
++    logger.info({ pnl, equity }, 'Trade closed updated');
++
++    // --- Push closed trade into Redis list for reporting ---
++    // Ensure you have a `pushClosedTrade` helper reachable (helpers/pushClosedTrade.js)
++    try {
++      const { pushClosedTrade } = await import('../../helpers/pushClosedTrade.js');
++      // Example trade object - adapt to your real trade representation
++      const tradeObj = {
++        id: `closed-${Date.now()}`,
++        symbol: 'UNKNOWN',
++        side: 'buy',
++        entry: 0,
++        stop: 0,
++        pnl,
++        closedAt: Date.now()
++      };
++      // Use same REDIS URL as your store or pass explicitly
++      await pushClosedTrade(process.env.REDIS_URL || 'redis://localhost:6379', process.env.BOT_ID || 'demoBot', tradeObj);
++    } catch (e) {
++      logger.warn({ err: String(e) }, 'Failed to push closed trade for reporting');
++    }
+   }

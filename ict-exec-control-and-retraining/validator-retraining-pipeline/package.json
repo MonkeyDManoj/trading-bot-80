@@ -1,0 +1,9 @@
+{
+  "name": "validator-retraining-pipeline",
+  "version": "1.0.0",
+  "type": "module",
+  "scripts": {
+    "train": "python3 scripts/train_validator.py --data data/trades.csv --out models/validator_gbt_v1.pkl"
+  },
+  "devDependencies": {}
+}

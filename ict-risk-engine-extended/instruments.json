@@ -1,0 +1,22 @@
+{
+  "EURUSD": {
+    "pipValue": 10,
+    "contractSize": 100000,
+    "tickSize": 0.0001
+  },
+  "GBPUSD": {
+    "pipValue": 10,
+    "contractSize": 100000,
+    "tickSize": 0.0001
+  },
+  "XAUUSD": {
+    "pipValue": 1,
+    "contractSize": 100,
+    "tickSize": 0.01
+  },
+  "NAS100": {
+    "pipValue": 1,
+    "contractSize": 1,
+    "tickSize": 1
+  }
+}

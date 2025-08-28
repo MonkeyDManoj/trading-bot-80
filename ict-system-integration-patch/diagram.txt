@@ -1,0 +1,29 @@
+ICT Trading Bot — High Level Diagram
+-----------------------------------
+
+Signals/Strategy -> ValidatorMiddleware -> RiskMiddleware -> ExecutionService
+                             |                  |                 |
+                             v                  v                 v
+                        Validator Worker     AccountStoreRedis     Execution Control (pause/resume)
+                        (scores setups)      (Redis: risk:account:{botId})
+
+When trade closes:
+  ExecutionService -> RiskService.onTradeClosed(pnl) -> AccountStoreRedis updated
+                                         |
+                                         v
+                              pushClosedTrade(redisUrl, botId, tradeJson)
+                              -> Redis list risk:trades:{botId}
+
+Reporting & Withdrawals:
+  Reporting Service (reads risk:trades:{botId} + risk:account:{botId}) -> CSV/JSON, Email, Slack
+  Withdrawal Service (auth via X-WITHDRAWAL-AUTH) -> calls broker with HMAC signature
+
+Deployment Manager:
+  Monitors Redis account keys (risk:account:{botId}), triggers ExecutionService /api/control (pause/resume) on drawdown breaches.
+
+Dashboard Backend:
+  Aggregates Execution WS, Redis metrics, Deployment Manager health to /api/* for React dashboard.
+
+Notes:
+- Control Mode toggle (global) is stored in Dashboard Backend and prevents control actions when OFF.
+- All services should use environment variables for Redis URL, secrets, and endpoints.

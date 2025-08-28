@@ -1,0 +1,27 @@
+version: '3.8'
+services:
+  redis:
+    image: redis:7-alpine
+    ports: ['6379:6379']
+  execution-service:
+    build: ./execution-service
+    ports: ['3001:3001']
+    environment:
+      - LOG_LEVEL=info
+  risk-simulator:
+    build: ./risk-simulator
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - BOT_ID=demoBot
+  dashboard-backend:
+    build: ./dashboard-backend
+    ports: ['4000:4000']
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - EXEC_URL=http://execution-service:3001
+  deployment-manager:
+    build: ./deployment-manager
+    environment:
+      - REDIS_URL=redis://redis:6379
+      - EXEC_URL=http://execution-service:3001
+      - BOT_ID=demoBot
